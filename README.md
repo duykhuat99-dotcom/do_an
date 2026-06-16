@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # RAG DataMart Chatbot
 
 Chatbot AI phân tích dữ liệu từ DataMart bằng **RAG (Retrieval Augmented Generation)** kết hợp **Large Language Model**, kiến trúc **Multi-Agent (6 agents)**.
@@ -121,7 +120,3 @@ do_an/
 ## Công nghệ
 
 FastAPI · SQLAlchemy 2 · MySQL 8 · ChromaDB · sentence-transformers (all-MiniLM-L6-v2) · Ollama (Mistral/Llama3/Gemma) · Pandas · Plotly · React 18 · Vite · Material UI · Docker.
-=======
-# do_an
-Đồ án LLM, RAG hỏi đáp dữ liệu
->>>>>>> 52e6e75600db98e6ce57fa7b4a3d4193f0623999
