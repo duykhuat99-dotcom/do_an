@@ -1,0 +1,105 @@
+# ============================================================
+# Toàn bộ hệ thống — Phase 9
+#   mysql    : DataMart (Star Schema) + bảng lịch sử
+#   ollama   : LLM mã nguồn mở (Mistral / Llama 3 / Gemma)
+#   backend  : FastAPI + 6 Agents + RAG
+#   frontend : React (nginx) + reverse proxy /api -> backend
+#
+# Khởi chạy:
+#   docker compose up -d --build
+# Sau khi MySQL sẵn sàng, nạp dữ liệu mẫu + model + vector DB:
+#   docker compose exec backend python /scripts/seed_data.py --reset
+#   docker compose exec ollama ollama pull qwen2.5:1.5b
+#   curl -X POST http://localhost:8000/rebuild-vector-db
+# Frontend: http://localhost   |   API docs: http://localhost:8000/docs
+# ============================================================
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: datamart-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: datamart
+      MYSQL_USER: datamart_user
+      MYSQL_PASSWORD: changeme
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql:ro
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-prootpass"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: datamart-ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: datamart-backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: "3306"
+      MYSQL_DATABASE: datamart
+      MYSQL_USER: datamart_user
+      MYSQL_PASSWORD: changeme
+      MYSQL_READONLY_USER: datamart_ro
+      MYSQL_READONLY_PASSWORD: changeme
+      # --- LLM: đang dùng Google Gemini qua API key (chuẩn OpenAI-compatible).
+      #     Đặt GEMINI_API_KEY trong file .env ở thư mục gốc (cạnh docker-compose.yml).
+      #     Muốn quay lại Ollama local: đổi 4 dòng dưới thành
+      #       LLM_PROVIDER: ollama / LLM_BASE_URL: http://ollama:11434
+      #       LLM_MODEL: qwen2.5:1.5b / LLM_API_KEY: "" (và pull model).
+      LLM_PROVIDER: openai_compat
+      LLM_API_KEY: ${GROQ_API_KEY:-}
+      LLM_BASE_URL: https://api.groq.com/openai/v1
+      LLM_MODEL: llama-3.1-8b-instant   # free tier hạn mức cao hơn gemini-2.5-flash (20/ngày)
+      CHROMA_PERSIST_DIR: /app/chroma_db
+      METADATA_DIR: /metadata
+      CORS_ORIGINS: http://localhost,http://localhost:5173
+      # --- Đăng nhập (1 tài khoản cố định) ---
+      AUTH_USERNAME: admin
+      AUTH_PASSWORD: admin123
+      JWT_SECRET: ${JWT_SECRET:-doi-thanh-chuoi-bi-mat-ngau-nhien-dai}
+      ACCESS_TOKEN_EXPIRE_MINUTES: "1440"
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_data:/app/chroma_db
+      - hf_cache:/root/.cache/huggingface   # cache embedding model giữa các lần chạy
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: /api
+    container_name: datamart-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+volumes:
+  mysql_data:
+  ollama_data:
+  chroma_data:
+  hf_cache:

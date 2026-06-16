@@ -1,0 +1,53 @@
+# Quy tắc nghiệp vụ & ràng buộc khi sinh SQL. Cung cấp ngữ cảnh để LLM viết
+# câu truy vấn đúng ý nghĩa nghiệp vụ trên mô hình Star Schema.
+business_rules:
+  - id: BR01
+    name: Định nghĩa doanh thu
+    description: >
+      "Doanh thu" luôn tính bằng SUM(fact_sales.total_amount) — đã trừ chiết khấu.
+      KHÔNG dùng unit_price*quantity vì chưa trừ discount.
+    tables: [fact_sales]
+
+  - id: BR02
+    name: Chỉ tính đơn hoàn tất
+    description: >
+      Khi phân tích doanh số/giá trị đơn, mặc định chỉ tính đơn có
+      order_status='completed', trừ khi người dùng yêu cầu gồm cả hủy/trả.
+    tables: [fact_orders]
+
+  - id: BR03
+    name: Join qua dim_time để lọc thời gian
+    description: >
+      Mọi điều kiện theo năm/quý/tháng phải JOIN bảng fact với dim_time qua time_id,
+      rồi lọc trên dim_time.year / dim_time.quarter / dim_time.month.
+    tables: [dim_time, fact_sales, fact_orders, fact_inventory]
+
+  - id: BR04
+    name: Cảnh báo tồn kho thấp
+    description: >
+      Sản phẩm "tồn kho thấp" là khi fact_inventory.stock_quantity < reorder_level,
+      xét trên snapshot mới nhất (time_id lớn nhất).
+    tables: [fact_inventory]
+
+  - id: BR05
+    name: Đơn vị tiền tệ
+    description: Mọi giá trị tiền (unit_price, total_amount, stock_value...) tính bằng VND.
+    tables: [fact_sales, fact_inventory, dim_product]
+
+  - id: BR06
+    name: Giới hạn an toàn
+    description: >
+      Truy vấn liệt kê chi tiết nên có LIMIT hợp lý (vd 100) để tránh trả quá nhiều dòng.
+      Truy vấn tổng hợp (GROUP BY) thì không bắt buộc LIMIT.
+    tables: []
+
+  - id: BR07
+    name: Chỉ được phép đọc dữ liệu (read-only)
+    description: >
+      LLM CHỈ được sinh câu lệnh truy vấn đọc dữ liệu (SELECT, hoặc WITH ... SELECT).
+      TUYỆT ĐỐI KHÔNG được sinh các lệnh thay đổi/phá hoại dữ liệu: INSERT, UPDATE,
+      DELETE, DROP, TRUNCATE, ALTER, CREATE, REPLACE, GRANT, REVOKE, MERGE, hay bất kỳ
+      lệnh DDL/DML ghi nào. Không nối nhiều câu lệnh (no stacked queries). Nếu câu hỏi
+      của người dùng yêu cầu thêm/sửa/xóa dữ liệu thì phải từ chối, chỉ phục vụ mục đích
+      phân tích/đọc dữ liệu.
+    tables: []

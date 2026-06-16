@@ -1,0 +1,32 @@
+table: dim_product
+type: dimension
+description: >
+  Bảng chiều sản phẩm. Mỗi dòng mô tả một sản phẩm đang kinh doanh,
+  gồm danh mục, thương hiệu, giá vốn và giá bán niêm yết.
+grain: Mỗi dòng là một sản phẩm duy nhất (product_id).
+columns:
+  - name: product_id
+    type: INT
+    description: Khóa chính của sản phẩm. Được tham chiếu bởi fact_sales và fact_inventory.
+  - name: product_code
+    type: VARCHAR
+    description: Mã sản phẩm dạng SPxxxx, duy nhất, dùng tra cứu nghiệp vụ.
+  - name: product_name
+    type: VARCHAR
+    description: Tên đầy đủ của sản phẩm (gồm thương hiệu, danh mục, model).
+  - name: category
+    type: VARCHAR
+    description: Danh mục sản phẩm (Điện thoại, Laptop, Phụ kiện, Đồng hồ, Máy tính bảng).
+  - name: brand
+    type: VARCHAR
+    description: Thương hiệu sản phẩm (Apple, Samsung, Dell, ...).
+  - name: unit_cost
+    type: DECIMAL
+    description: Giá vốn một đơn vị sản phẩm (VND). Dùng tính lợi nhuận và giá trị tồn kho.
+  - name: unit_price
+    type: DECIMAL
+    description: Giá bán niêm yết một đơn vị (VND).
+sample_questions:
+  - Có bao nhiêu sản phẩm theo từng danh mục?
+  - Top 10 sản phẩm có giá bán cao nhất?
+  - Thương hiệu nào có nhiều sản phẩm nhất?

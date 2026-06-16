@@ -1,0 +1,20 @@
+[
+  { "question": "Tổng doanh thu năm 2025?", "category": "sales", "expected_tables": ["fact_sales"] },
+  { "question": "Doanh thu theo chi nhánh?", "category": "sales", "expected_tables": ["fact_sales", "dim_branch"] },
+  { "question": "Top 5 sản phẩm bán chạy nhất?", "category": "sales", "expected_tables": ["fact_sales", "dim_product"] },
+  { "question": "Doanh thu theo danh mục sản phẩm?", "category": "sales", "expected_tables": ["fact_sales", "dim_product"] },
+  { "question": "Doanh thu theo từng tháng?", "category": "sales", "expected_tables": ["fact_sales", "dim_time"] },
+  { "question": "Doanh thu theo vùng miền?", "category": "sales", "expected_tables": ["fact_sales", "dim_branch"] },
+  { "question": "Top 10 khách hàng chi tiêu nhiều nhất?", "category": "sales", "expected_tables": ["fact_sales", "dim_customer"] },
+  { "question": "Số khách hàng theo phân khúc?", "category": "customer", "expected_tables": ["dim_customer"] },
+  { "question": "Số sản phẩm theo thương hiệu?", "category": "product", "expected_tables": ["dim_product"] },
+  { "question": "Có bao nhiêu đơn hàng theo trạng thái?", "category": "order", "expected_tables": ["fact_orders"] },
+  { "question": "Tỷ lệ đơn hàng bị hủy?", "category": "order", "expected_tables": ["fact_orders"] },
+  { "question": "Giá trị đơn hàng trung bình theo chi nhánh?", "category": "order", "expected_tables": ["fact_orders", "dim_branch"] },
+  { "question": "Giá trị tồn kho theo chi nhánh?", "category": "inventory", "expected_tables": ["fact_inventory", "dim_branch"] },
+  { "question": "Sản phẩm nào đang tồn kho dưới ngưỡng đặt hàng lại?", "category": "inventory", "expected_tables": ["fact_inventory"] },
+  { "question": "Có bao nhiêu nhiệm vụ theo từng đơn vị chủ trì?", "category": "task", "expected_tables": ["qlnv_chitiet"] },
+  { "question": "Liệt kê các nhiệm vụ đang quá hạn?", "category": "task", "expected_tables": ["qlnv_chitiet"] },
+  { "question": "Số nhiệm vụ theo từng tháng?", "category": "task", "expected_tables": ["qlnv_chitiet"] },
+  { "question": "Thống kê nhiệm vụ theo tình trạng?", "category": "task", "expected_tables": ["qlnv_chitiet"] }
+]

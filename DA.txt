@@ -1,0 +1,93 @@
+Bạn là một Software Architect, AI Engineer, Data Engineer và Fullstack Developer Senior. Tôi đang thực hiện đồ án tốt nghiệp với đề tài: "Ứng dụng RAG (Retrieval Augmented Generation) và Large Language Model trong xây dựng Chatbot AI phân tích dữ liệu từ DataMart".
+
+Nhiệm vụ của bạn là giúp tôi thiết kế, xây dựng cấu trúc và viết mã nguồn triển khai toàn bộ hệ thống này từ đầu đến cuối theo chuẩn Production.
+
+Dưới đây là đặc tả yêu cầu chi tiết của hệ thống:
+
+====================================================
+1. KIẾN TRÚC TỔNG THỂ & LUỒNG DỮ LIỆU
+====================================================
+Hệ thống được thiết kế theo mô hình Micro-Agent kết hợp RAG Layer:
+Frontend (React) -> Backend API (FastAPI) -> AI Orchestrator -> RAG Engine (Retriever + ChromaDB) -> Text-to-SQL Agent -> MySQL DataMart -> Insight & Chart Agents -> History Agent -> Frontend.
+
+====================================================
+2. CHIẾT LƯỢC RAG & EMBEDDING PIPELINE
+====================================================
+- KHÔNG embedding dữ liệu Fact dòng. Chỉ embedding siêu dữ liệu (Metadata) và tri thức doanh nghiệp (Business Knowledge).
+- Metadata bao gồm: Tên bảng, mô tả bảng, tên cột, mô tả cột, định nghĩa KPI, Business Rules, Data Dictionary.
+- Định dạng lưu trữ Metadata: Các file `metadata/*.yaml` hoặc `metadata/*.json`.
+- Embedding Model: Sử dụng `sentence-transformers/all-MiniLM-L6-v2` (chạy Local/nhẹ).
+- Vector Database: Sử dụng ChromaDB (Quản lý Collection, Similarity Search, Top K Retrieval, Metadata Filtering).
+
+====================================================
+3. TẦNG DỮ LIỆU (DATAMART & HISTORY CORES)
+====================================================
+- Nguồn dữ liệu: MySQL DataMart tổ chức theo mô hình Star Schema (Fact Tables: `fact_sales`, `fact_orders`, `fact_inventory`; Dimension Tables: `dim_product`, `dim_customer`, `dim_time`, `dim_branch`).
+- Module kết nối: Sử dụng SQLAlchemy (Connection Pool, Health Check, Database Connection Check, Retry Connection, Logging).
+- Cấu hình qua file `.env` (MYSQL_HOST, MYSQL_PORT, MYSQL_DATABASE, MYSQL_USER, MYSQL_PASSWORD).
+- Lưu trữ lịch sử (History): Hệ thống phải có cơ chế lưu vết lịch sử hội thoại, các câu lệnh SQL đã sinh, thời gian thực thi và kết quả phản hồi vào database để duy trì context phiên làm việc.
+
+====================================================
+4. LLM ABSTRACTION LAYER
+====================================================
+- Tạo một Interface trừu tượng `LLMProviderInterface` để có thể dễ dàng chuyển đổi cấu hình model thông qua `.env`.
+- Hỗ trợ các dòng model mã nguồn mở chạy local/API: Mistral 7B Instruct, Llama 3 8B Instruct, Gemma 2B.
+
+====================================================
+5. KIẾN TRÚC ĐA TÁC VỤ (MULTI-AGENT ARCHITECTURE)
+====================================================
+Hệ thống điều phối qua 6 Agents:
+1. Metadata Agent: Tìm schema, table, column và business rules liên quan tới câu hỏi từ ChromaDB.
+2. SQL Agent: Nhận câu hỏi và Schema Context để sinh câu lệnh MySQL đúng cú pháp.
+3. Validation Agent (Guardrail): Quét chuỗi SQL bằng Regex và LLM để ngăn chặn phá hoại dữ liệu (Chặn hoàn toàn: DROP, DELETE, TRUNCATE, ALTER, UPDATE, INSERT).
+4. Insight Agent: Phân tích kết quả dữ liệu trả về (Pandas DataFrame) để đưa ra phân tích (Tăng trưởng, xu hướng, KPI, so sánh kỳ trước).
+5. Visualization Agent: Xác định loại biểu đồ phù hợp (Bar, Line, Pie, Area, Scatter) và đóng gói thành cấu hình Plotly JSON gửi về Frontend.
+6. History Agent: Quản lý ghi/đọc lịch sử hội thoại của người dùng vào database.
+
+====================================================
+6. GIAO DIỆN & BACKEND CONTRACT
+====================================================
+- Backend (FastAPI): Cung cấp các API Endpoints (Có Request/Response Schema bằng Pydantic, Validation và Exception Handling chặt chẽ):
+  * POST /chat (Hội thoại chính)
+  * POST /generate-sql (Chỉ sinh SQL)
+  * POST /chart (Sinh cấu hình biểu đồ)
+  * POST /history (Lấy lịch sử hội thoại)
+  * POST /health & /database-test (Kiểm tra hệ thống)
+  * POST /reload-metadata & /rebuild-vector-db (Quản trị RAG)
+- Frontend (React + Vite + Material UI + Axios + Plotly): Giao diện Single Page gồm 3 Tab:
+  * TAB 1: Chat Assistant (Khung chat hiển thị hội thoại, SQL sinh ra, câu trả lời, thời gian thực thi).
+  * TAB 2: Analytics Dashboard (Hiển thị câu hỏi, SQL, Biểu đồ Plotly tương tác, AI Insight).
+  * TAB 3: System Management (Theo dõi trạng thái Real-time của MySQL, Vector DB, LLM).
+
+====================================================
+7. CẤU TRÚC MÃ NGUỒN TIÊU CHUẨN
+====================================================
+project-root/
+├── backend/
+│   ├── app/
+│   │   ├── api/          # Endpoints & Routers
+│   │   ├── agents/       # Logic 6 Agents (Metadata, SQL, Validation, Insight, Chart, History)
+│   │   ├── rag/          # Embedding & ChromaDB Engine
+│   │   ├── database/     # SQLAlchemy, Connection Pool & History Models
+│   │   ├── services/     # Business Logic Layers
+│   │   ├── prompts/      # Agent Prompts Management
+│   │   ├── models/       # DB Models
+│   │   ├── schemas/      # Pydantic Schemas
+│   │   └── utils/        # Loggers & Helpers
+│   └── main.py
+├── frontend/
+│   ├── src/
+│   │   ├── components/   # Chat, Chart, Status components
+│   │   ├── pages/        # Tab pages
+│   │   ├── services/     # Axios API layer
+│   │   └── hooks/
+└── metadata/             # Cấu hình .yaml / .json mẫu
+
+====================================================
+MỤC TIÊU PHẢN HỒI CỦA BẠN:
+====================================================
+Tôi muốn xây dựng hệ thống này theo từng bước (Phase) để đảm bảo không bị quá tải token và giữ được chất lượng code cao nhất. 
+
+Bây giờ, hãy xác nhận rằng bạn đã hiểu rõ toàn bộ yêu cầu kiến trúc, luồng đi của dữ liệu, nhiệm vụ của 6 agents và cấu trúc thư mục trên. 
+
+Sau khi xác nhận, hãy tóm tắt ngắn gọn lại lộ trình triển khai mã nguồn theo từng giai đoạn (bắt đầu từ tầng Database/RAG cơ bản lên tới Agent và Frontend) và hỏi tôi xem tôi muốn bắt đầu viết code chi tiết cho Giai đoạn nào trước.

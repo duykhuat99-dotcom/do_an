@@ -1,0 +1,35 @@
+# ===== Web framework =====
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
+
+# ===== Config & validation =====
+pydantic==2.10.4
+pydantic-settings==2.7.1
+python-dotenv==1.0.1
+
+# ===== Database (DataMart & History) =====
+SQLAlchemy==2.0.36
+PyMySQL==1.1.1
+cryptography==44.0.0
+
+# ===== RAG / Vector store / Embedding =====
+chromadb==0.5.23
+sentence-transformers==3.3.1
+
+# ===== Data analysis & visualization =====
+pandas==2.2.3
+numpy==2.2.1
+plotly==5.24.1
+
+# ===== LLM providers =====
+httpx==0.27.2   # <0.28 để tương thích ollama 0.4.4 (chromadb cần >=0.27)
+ollama==0.4.4
+
+# ===== Utilities =====
+PyYAML==6.0.2
+tenacity==9.0.0
+Faker==33.1.0
+
+# ===== Auth =====
+PyJWT==2.10.1

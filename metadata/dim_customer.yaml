@@ -1,0 +1,32 @@
+table: dim_customer
+type: dimension
+description: >
+  Bảng chiều khách hàng. Mỗi dòng mô tả một khách hàng cùng các thuộc tính
+  nhân khẩu học và phân khúc dùng để phân tích hành vi mua sắm.
+grain: Mỗi dòng là một khách hàng duy nhất (customer_id).
+columns:
+  - name: customer_id
+    type: INT
+    description: Khóa chính của khách hàng. Được tham chiếu bởi fact_sales và fact_orders.
+  - name: customer_code
+    type: VARCHAR
+    description: Mã khách hàng dạng KHxxxxx, duy nhất.
+  - name: customer_name
+    type: VARCHAR
+    description: Họ tên khách hàng.
+  - name: gender
+    type: VARCHAR
+    description: Giới tính (Nam, Nữ).
+  - name: age_group
+    type: VARCHAR
+    description: Nhóm tuổi (18-25, 26-35, 36-45, 46-60, 60+).
+  - name: city
+    type: VARCHAR
+    description: Thành phố cư trú của khách hàng.
+  - name: segment
+    type: VARCHAR
+    description: Phân khúc khách hàng (VIP, Thân thiết, Thường, Mới).
+sample_questions:
+  - Phân bố khách hàng theo phân khúc?
+  - Khách hàng VIP tập trung ở thành phố nào?
+  - Tỷ lệ khách hàng theo nhóm tuổi?

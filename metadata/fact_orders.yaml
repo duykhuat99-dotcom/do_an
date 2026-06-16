@@ -1,0 +1,38 @@
+table: fact_orders
+type: fact
+description: >
+  Bảng sự kiện đơn hàng ở cấp đơn (không phải cấp dòng sản phẩm). Mỗi dòng là một
+  đơn hàng cùng trạng thái và tổng giá trị. Dùng phân tích số đơn, giá trị đơn
+  trung bình (AOV), tỷ lệ hủy/trả hàng.
+grain: Mỗi dòng là một đơn hàng (order_id).
+columns:
+  - name: order_id
+    type: INT
+    description: Khóa chính của đơn hàng.
+  - name: customer_id
+    type: INT
+    description: Khóa ngoại tới dim_customer (khách đặt đơn).
+    foreign_key: dim_customer.customer_id
+  - name: branch_id
+    type: INT
+    description: Khóa ngoại tới dim_branch (chi nhánh xử lý đơn).
+    foreign_key: dim_branch.branch_id
+  - name: time_id
+    type: INT
+    description: Khóa ngoại tới dim_time (ngày đặt đơn).
+    foreign_key: dim_time.time_id
+  - name: num_items
+    type: INT
+    description: Số mặt hàng trong đơn.
+    measure: true
+  - name: order_status
+    type: VARCHAR
+    description: Trạng thái đơn (completed=hoàn tất, cancelled=hủy, returned=trả hàng).
+  - name: total_value
+    type: DECIMAL
+    description: Tổng giá trị đơn hàng (VND).
+    measure: true
+sample_questions:
+  - Có bao nhiêu đơn hàng theo trạng thái?
+  - Tỷ lệ đơn bị hủy là bao nhiêu?
+  - Giá trị đơn hàng trung bình theo chi nhánh?
