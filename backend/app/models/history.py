@@ -35,6 +35,18 @@ class ConversationHistory(Base):
     )
 
 
+class ChatSession(Base):
+    """Lưu tên tùy chỉnh (đặt lại) cho một cuộc trò chuyện."""
+
+    __tablename__ = "chat_session"
+
+    session_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    title: Mapped[str] = mapped_column(String(255))
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.now()
+    )
+
+
 class Feedback(Base):
     __tablename__ = "feedback"
 

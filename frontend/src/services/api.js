@@ -100,6 +100,22 @@ export const api = {
       throw toError(e)
     }
   },
+  async renameSession(sessionId, title) {
+    try {
+      const { data } = await client.patch(`/sessions/${encodeURIComponent(sessionId)}`, { title })
+      return data
+    } catch (e) {
+      throw toError(e)
+    }
+  },
+  async deleteSession(sessionId) {
+    try {
+      const { data } = await client.delete(`/sessions/${encodeURIComponent(sessionId)}`)
+      return data
+    } catch (e) {
+      throw toError(e)
+    }
+  },
 
   async stats() {
     try {

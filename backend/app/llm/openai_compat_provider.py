@@ -18,7 +18,7 @@ from tenacity import (
 )
 
 from app.core.config import settings
-from app.llm.base import LLMError, LLMProviderInterface, LLMResponse
+from app.llm.base import LLMError, LLMProviderInterface, LLMRateLimitError, LLMResponse
 from app.utils import get_logger
 
 logger = get_logger(__name__)
@@ -50,7 +50,7 @@ class OpenAICompatProvider(LLMProviderInterface):
         reraise=True,
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=1, max=8),
-        retry=retry_if_exception_type((httpx.TransportError, httpx.HTTPStatusError)),
+        retry=retry_if_exception_type(httpx.TransportError),  # KHÔNG retry 429 -> fail-fast để fallback
     )
     def _post_chat(self, payload: dict) -> dict:
         with httpx.Client(timeout=self.timeout) as client:
@@ -89,6 +89,12 @@ class OpenAICompatProvider(LLMProviderInterface):
         start = time.perf_counter()
         try:
             data = self._post_chat(payload)
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code == 429:
+                logger.warning("Provider hết hạn mức (429): %s", self.base_url)
+                raise LLMRateLimitError(f"Hết hạn mức (429) tại {self.base_url}") from exc
+            logger.error("OpenAI-compat lỗi HTTP %s", exc.response.status_code)
+            raise LLMError(f"Gọi LLM thất bại (HTTP {exc.response.status_code})") from exc
         except httpx.HTTPError as exc:
             logger.error("OpenAI-compat generate lỗi: %s", exc)
             raise LLMError(f"Gọi LLM thất bại: {exc}") from exc

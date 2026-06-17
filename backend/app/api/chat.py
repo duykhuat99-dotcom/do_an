@@ -17,6 +17,7 @@ from app.schemas.chat import (
     FeedbackRequest,
     HistoryRequest,
     HistoryResponse,
+    RenameSessionRequest,
     SessionListResponse,
     StatsResponse,
     SuggestRequest,
@@ -93,6 +94,16 @@ async def history(req: HistoryRequest) -> HistoryResponse:
 async def sessions(limit: int = 50) -> SessionListResponse:
     items = _orchestrator.list_sessions(limit=limit)
     return SessionListResponse(count=len(items), sessions=items)
+
+
+@router.patch("/sessions/{session_id}", summary="Đổi tên cuộc trò chuyện")
+async def rename_session(session_id: str, req: RenameSessionRequest) -> dict[str, bool]:
+    return {"success": _orchestrator.rename_session(session_id, req.title)}
+
+
+@router.delete("/sessions/{session_id}", summary="Xóa cuộc trò chuyện")
+async def delete_session(session_id: str) -> dict[str, bool]:
+    return {"success": _orchestrator.delete_session(session_id)}
 
 
 @router.get("/stats", response_model=StatsResponse, summary="Thống kê truy vấn (admin)")

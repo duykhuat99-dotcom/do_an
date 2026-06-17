@@ -173,6 +173,12 @@ class Orchestrator:
     def list_sessions(self, limit: int = 50) -> list[dict[str, Any]]:
         return self.history.list_sessions(limit=limit)
 
+    def rename_session(self, session_id: str, title: str) -> bool:
+        return self.history.rename_session(session_id, title)
+
+    def delete_session(self, session_id: str) -> bool:
+        return self.history.delete_session(session_id)
+
     def get_stats(self) -> dict[str, Any]:
         return self.history.get_stats()
 

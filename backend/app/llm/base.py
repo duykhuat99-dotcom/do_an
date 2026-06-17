@@ -15,6 +15,10 @@ class LLMError(RuntimeError):
     """Lỗi khi gọi LLM (kết nối, timeout, phản hồi không hợp lệ...)."""
 
 
+class LLMRateLimitError(LLMError):
+    """Lỗi hết hạn mức / quá tải (HTTP 429). Dùng để kích hoạt fallback sang provider khác."""
+
+
 @dataclass
 class LLMResponse:
     """Kết quả sinh văn bản chuẩn hóa từ mọi provider."""

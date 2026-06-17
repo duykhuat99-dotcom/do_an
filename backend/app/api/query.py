@@ -28,6 +28,21 @@ _service = TextToSQLService()
 _analysis = AnalysisService()
 
 
+def _format_history(turns) -> str | None:
+    """Định dạng các lượt hỏi trước thành ngữ cảnh multi-turn cho SQL Agent."""
+    if not turns:
+        return None
+    from app.core.config import settings
+
+    lines: list[str] = []
+    for t in turns[-settings.history_context_turns:]:
+        if t.question:
+            lines.append(f"Người dùng: {t.question}")
+        if t.sql:
+            lines.append(f"SQL đã dùng: {t.sql}")
+    return "\n".join(lines) if lines else None
+
+
 @router.post("/generate-sql", response_model=GenerateSQLResponse, summary="Sinh SQL từ câu hỏi")
 async def generate_sql(req: GenerateSQLRequest) -> GenerateSQLResponse:
     try:
@@ -61,7 +76,11 @@ async def chart(req: ChartRequest) -> ChartResponse:
     """Chạy pipeline (sinh SQL + thực thi) rồi tạo Plotly config và AI Insight."""
     try:
         outcome = _service.run(
-            req.question, top_k=req.top_k, execute=True, max_rows=req.max_rows
+            req.question,
+            top_k=req.top_k,
+            execute=True,
+            max_rows=req.max_rows,
+            history=_format_history(req.history),
         )
     except LLMError as exc:
         raise HTTPException(status_code=502, detail=f"LLM lỗi: {exc}") from exc

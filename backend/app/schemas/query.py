@@ -38,11 +38,21 @@ class ChartInfo(BaseModel):
     reason: str = ""
 
 
+class HistoryTurn(BaseModel):
+    """Một lượt hỏi trước đó (để hiểu câu hỏi nối tiếp)."""
+
+    question: str
+    sql: str | None = None
+
+
 class ChartRequest(BaseModel):
     question: str = Field(..., min_length=1, examples=["Doanh thu theo danh mục sản phẩm?"])
     top_k: int | None = Field(default=None, ge=1, le=50)
     max_rows: int = Field(default=1000, ge=1, le=10000)
     with_insight: bool = Field(default=True)
+    history: list[HistoryTurn] | None = Field(
+        default=None, description="Các lượt hỏi trước trong cùng khung (multi-turn)"
+    )
 
 
 class ChartResponse(BaseModel):

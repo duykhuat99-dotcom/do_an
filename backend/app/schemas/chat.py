@@ -78,6 +78,10 @@ class SessionListResponse(BaseModel):
     sessions: list[SessionItem] = Field(default_factory=list)
 
 
+class RenameSessionRequest(BaseModel):
+    title: str = Field(..., min_length=1, max_length=255)
+
+
 class FeedbackRequest(BaseModel):
     rating: str = Field(..., pattern="^(up|down)$")
     question: str | None = None

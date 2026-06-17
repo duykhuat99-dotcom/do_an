@@ -369,6 +369,38 @@ Nếu Cách 1 OK mà Cách 2 lỗi → kiểm tra lại biến trong `docker com
 
 ---
 
+## Chuỗi LLM dự phòng (fallback)
+
+Hệ thống hỗ trợ **chuỗi provider tự động chuyển dự phòng** khi gặp hết hạn mức (429):
+
+```
+Groq (hết) → OpenRouter (hết) → Gemini (hết) → Ollama local (luôn sẵn)
+```
+
+Cấu hình sẵn trong [docker-compose.yml](docker-compose.yml) qua biến `LLM_CHAIN`. Bạn chỉ cần:
+
+1. **Điền các API key** bạn có vào file `.env` ở thư mục gốc (tier thiếu key sẽ tự bỏ qua):
+   ```env
+   GROQ_API_KEY=gsk_...
+   OPENROUTER_API_KEY=sk-or-...
+   GEMINI_API_KEY=AIza...
+   ```
+2. **Pull model local** làm lưới an toàn cuối:
+   ```bash
+   docker compose exec ollama ollama pull qwen2.5:1.5b
+   ```
+3. `docker compose up -d backend`
+
+Cách hoạt động: mỗi lần gọi LLM, hệ thống thử tier 1; nếu **429 (hết limit)** → tự chuyển tier 2 → ... → cuối cùng dùng Ollama local. Kiểm tra: `GET /llm-status` (hoặc `/system-status`) sẽ hiện trạng thái cả chuỗi.
+
+| Đặc điểm | Ghi chú |
+|----------|---------|
+| Bật/tắt | Để `LLM_CHAIN` rỗng → quay về 1 provider đơn (`LLM_PROVIDER`) |
+| Thiếu key | Tier không có key tự bị bỏ qua, không lỗi |
+| Khi fallback | Chất lượng có thể giảm (model local nhỏ hơn) nhưng guardrail + self-correction vẫn bảo vệ |
+
+---
+
 ## Tóm tắt cổng dịch vụ
 
 | Dịch vụ | Cổng (Docker) | Cổng (thủ công) |

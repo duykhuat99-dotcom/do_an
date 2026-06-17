@@ -15,11 +15,11 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.database import get_session_factory
-from app.models import ConversationHistory, Feedback, QueryLog
+from app.models import ChatSession, ConversationHistory, Feedback, QueryLog
 from app.utils import get_logger
 
 logger = get_logger(__name__)
@@ -209,6 +209,7 @@ class HistoryAgent:
 
                 session_ids = [r.session_id for r in agg]
                 titles: dict[str, str] = {}
+                custom: dict[str, str] = {}
                 if session_ids:
                     trows = session.execute(
                         select(
@@ -224,11 +225,20 @@ class HistoryAgent:
                     for sid, question in trows:
                         if sid not in titles and question:
                             titles[sid] = question
+                    # Tên tùy chỉnh (đặt lại) — ưu tiên hơn câu hỏi đầu.
+                    crows = session.execute(
+                        select(ChatSession.session_id, ChatSession.title).where(
+                            ChatSession.session_id.in_(session_ids)
+                        )
+                    ).all()
+                    custom = {sid: t for sid, t in crows}
 
             return [
                 {
                     "session_id": r.session_id,
-                    "title": titles.get(r.session_id) or "Cuộc trò chuyện",
+                    "title": custom.get(r.session_id)
+                    or titles.get(r.session_id)
+                    or "Cuộc trò chuyện",
                     "last_at": r.last_at.isoformat() if r.last_at else None,
                     "message_count": int(r.msg_count),
                 }
@@ -237,6 +247,43 @@ class HistoryAgent:
         except SQLAlchemyError as exc:
             logger.warning("Không liệt kê được danh sách phiên: %s", exc)
             return []
+
+    def rename_session(self, session_id: str, title: str) -> bool:
+        """Đặt lại tên hiển thị cho một cuộc trò chuyện."""
+        title = (title or "").strip()[:255]
+        if not title:
+            return False
+        try:
+            factory = get_session_factory()
+            with factory() as session:
+                obj = session.get(ChatSession, session_id)
+                if obj:
+                    obj.title = title
+                else:
+                    session.add(ChatSession(session_id=session_id, title=title))
+                session.commit()
+            return True
+        except SQLAlchemyError as exc:
+            logger.warning("Không đổi tên được phiên: %s", exc)
+            return False
+
+    def delete_session(self, session_id: str) -> bool:
+        """Xóa toàn bộ lịch sử + nhật ký + tên của một cuộc trò chuyện."""
+        try:
+            factory = get_session_factory()
+            with factory() as session:
+                session.execute(
+                    delete(ConversationHistory).where(
+                        ConversationHistory.session_id == session_id
+                    )
+                )
+                session.execute(delete(QueryLog).where(QueryLog.session_id == session_id))
+                session.execute(delete(ChatSession).where(ChatSession.session_id == session_id))
+                session.commit()
+            return True
+        except SQLAlchemyError as exc:
+            logger.warning("Không xóa được phiên: %s", exc)
+            return False
 
     def get_history(self, session_id: str, limit: int = 20) -> list[dict[str, Any]]:
         """Đọc lịch sử hội thoại của một phiên (mới nhất trước)."""

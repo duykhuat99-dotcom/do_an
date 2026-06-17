@@ -132,6 +132,25 @@ export default function ChatPage() {
     api.sendFeedback({ rating, question, answer, session_id: activeId }).catch(() => {})
   }
 
+  async function handleRename(id, title) {
+    try {
+      await api.renameSession(id, title)
+      refreshSessions()
+    } catch {
+      /* bỏ qua */
+    }
+  }
+
+  async function handleDelete(id) {
+    try {
+      await api.deleteSession(id)
+      if (id === activeId) newChat()
+      refreshSessions()
+    } catch {
+      /* bỏ qua */
+    }
+  }
+
   return (
     <Box sx={{ display: 'flex', height: 'calc(100vh - 160px)', gap: 0 }}>
       <ConversationSidebar
@@ -140,6 +159,8 @@ export default function ChatPage() {
         onSelect={selectSession}
         onNew={newChat}
         loading={loadingSessions}
+        onRename={handleRename}
+        onDelete={handleDelete}
       />
 
       <Stack sx={{ flex: 1, pl: 2, minWidth: 0 }}>

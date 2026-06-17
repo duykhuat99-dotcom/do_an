@@ -40,13 +40,51 @@ def _create_provider(name: str) -> LLMProviderInterface:
     return provider_cls()
 
 
+def _build_one(item: dict) -> LLMProviderInterface | None:
+    """Tạo 1 provider từ phần tử cấu hình chuỗi. Bỏ qua tier API thiếu key."""
+    prov = (item.get("provider") or "").lower().strip()
+    model = item.get("model")
+    base_url = item.get("base_url")
+    if prov == "ollama":
+        from app.llm.ollama_provider import OllamaProvider
+
+        return OllamaProvider(model=model, base_url=base_url)
+    if prov == "openai_compat":
+        key = (item.get("api_key") or "").strip()
+        if not key:
+            logger.info("Bỏ qua tier (chưa có API key): %s", base_url)
+            return None
+        from app.llm.openai_compat_provider import OpenAICompatProvider
+
+        return OpenAICompatProvider(model=model, base_url=base_url, api_key=key)
+    logger.warning("Bỏ qua tier provider không hợp lệ: %s", prov)
+    return None
+
+
+def _build_chain() -> LLMProviderInterface:
+    """Dựng FallbackProvider từ cấu hình LLM_CHAIN; tier thiếu key sẽ bị bỏ qua."""
+    from app.llm.fallback_provider import FallbackProvider
+
+    providers = [p for p in (_build_one(i) for i in settings.llm_chain_list) if p is not None]
+    if not providers:
+        logger.warning("LLM_CHAIN không có tier hợp lệ -> dùng provider đơn")
+        return _create_provider(settings.llm_provider)
+    if len(providers) == 1:
+        return providers[0]
+    logger.info("Khởi tạo chuỗi fallback %d provider", len(providers))
+    return FallbackProvider(providers)
+
+
 def get_llm() -> LLMProviderInterface:
-    """Trả về LLM provider (lazy singleton) theo `.env`."""
+    """Trả về LLM provider (lazy singleton): chuỗi fallback nếu có LLM_CHAIN, ngược lại provider đơn."""
     global _instance
     if _instance is None:
         with _lock:
             if _instance is None:
-                _instance = _create_provider(settings.llm_provider)
+                if settings.llm_chain_list:
+                    _instance = _build_chain()
+                else:
+                    _instance = _create_provider(settings.llm_provider)
     return _instance
 
 

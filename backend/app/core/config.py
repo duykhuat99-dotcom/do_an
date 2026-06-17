@@ -72,6 +72,9 @@ class Settings(BaseSettings):
     llm_temperature: float = 0.1
     llm_max_tokens: int = 1024
     llm_timeout: int = 120
+    # Chuỗi fallback (JSON array). Mỗi phần tử: {provider, base_url, model, api_key?}.
+    # Nếu để trống -> dùng provider đơn (LLM_PROVIDER ở trên).
+    llm_chain: str = ""
 
     # ---------- Metadata ----------
     metadata_dir: str = "../metadata"
@@ -93,6 +96,19 @@ class Settings(BaseSettings):
     def cors_origin_list(self) -> list[str]:
         """Danh sách origin đã tách từ chuỗi cấu hình."""
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+
+    @property
+    def llm_chain_list(self) -> list[dict]:
+        """Parse cấu hình chuỗi fallback (JSON). Trả [] nếu rỗng/không hợp lệ."""
+        if not self.llm_chain.strip():
+            return []
+        import json
+
+        try:
+            data = json.loads(self.llm_chain)
+            return data if isinstance(data, list) else []
+        except (json.JSONDecodeError, TypeError):
+            return []
 
     @property
     def is_production(self) -> bool:
