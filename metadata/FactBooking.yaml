@@ -1,0 +1,50 @@
+table: FactBooking
+type: fact
+description: >
+  Bảng sự kiện đặt tour (trung tâm của Star Schema). Mỗi dòng là một lượt đặt tour
+  (booking), trỏ về 4 chiều: thời gian (DateKey), điểm đến (DestinationKey),
+  nhóm khách (SegmentKey), loại tour (TourKey). Dùng phân tích doanh thu, lượng khách,
+  số booking và điểm hài lòng.
+grain: Mỗi dòng là một lượt đặt tour (BookingID).
+columns:
+  - name: BookingID
+    type: BIGINT
+    description: Khóa chính của lượt đặt tour.
+  - name: DateKey
+    type: INT
+    description: Khóa ngoại tới DimDate (ngày đặt tour).
+    foreign_key: DimDate.DateKey
+  - name: DestinationKey
+    type: INT
+    description: Khóa ngoại tới DimDestination (điểm đến).
+    foreign_key: DimDestination.DestinationKey
+  - name: SegmentKey
+    type: INT
+    description: Khóa ngoại tới DimCustomerSegment (nhóm khách).
+    foreign_key: DimCustomerSegment.SegmentKey
+  - name: TourKey
+    type: INT
+    description: Khóa ngoại tới DimTour (loại tour).
+    foreign_key: DimTour.TourKey
+  - name: Revenue
+    type: DECIMAL
+    description: Doanh thu của lượt đặt (VNĐ). Dùng tính DOANH THU = SUM(Revenue).
+    measure: true
+  - name: Pax
+    type: INT
+    description: Số lượng khách của lượt đặt. Tổng khách = SUM(Pax).
+    measure: true
+  - name: BookingCount
+    type: INT
+    description: Số booking (mỗi dòng = 1). Tổng số booking = SUM(BookingCount) hoặc COUNT(*).
+    measure: true
+  - name: SatisfactionScore
+    type: DECIMAL
+    description: Điểm hài lòng (1-5). Điểm hài lòng trung bình = AVG(SatisfactionScore).
+    measure: true
+sample_questions:
+  - Tổng doanh thu năm 2024?
+  - Doanh thu theo điểm đến và theo tháng?
+  - Top 5 điểm đến theo lượng khách?
+  - Điểm hài lòng trung bình theo loại tour?
+  - Số booking theo nhóm khách hàng?

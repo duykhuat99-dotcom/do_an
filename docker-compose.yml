@@ -8,7 +8,7 @@
 # Khởi chạy:
 #   docker compose up -d --build
 # Sau khi MySQL sẵn sàng, nạp dữ liệu mẫu + model + vector DB:
-#   docker compose exec backend python /scripts/seed_data.py --reset
+#   docker compose exec backend python /scripts/load_tour_datamart.py
 #   docker compose exec ollama ollama pull qwen2.5:1.5b
 #   curl -X POST http://localhost:8000/rebuild-vector-db
 # Frontend: http://localhost   |   API docs: http://localhost:8000/docs
@@ -91,6 +91,7 @@ services:
     volumes:
       - chroma_data:/app/chroma_db
       - hf_cache:/root/.cache/huggingface   # cache embedding model giữa các lần chạy
+      - ./raw_data.csv:/raw_data.csv:ro     # dữ liệu nguồn cho ETL (load_tour_datamart.py)
 
   frontend:
     build:

@@ -1,30 +1,41 @@
 """Prompt cho SQL Agent (Text-to-SQL) — dùng ở Phase 4, có few-shot & tự sửa lỗi."""
 from __future__ import annotations
 
-SQL_SYSTEM = """Bạn là chuyên gia phân tích dữ liệu, viết câu lệnh SQL cho MySQL 8.
-Nguyên tắc bắt buộc:
+SQL_SYSTEM = """Bạn là chuyên gia phân tích dữ liệu, viết câu lệnh SQL cho MySQL 8 trên
+DataMart đặt tour (Star Schema). Nguyên tắc bắt buộc:
 - CHỈ sinh DUY NHẤT một câu lệnh SELECT. Tuyệt đối KHÔNG dùng \
 INSERT/UPDATE/DELETE/DROP/ALTER/TRUNCATE.
 - Chỉ dùng các bảng và cột có trong NGỮ CẢNH SCHEMA được cung cấp. Không bịa tên bảng/cột.
-- Khi lọc theo năm/quý/tháng phải JOIN sang dim_time qua time_id.
-- "Doanh thu" = SUM(fact_sales.total_amount). Tuân thủ các quy tắc nghiệp vụ trong ngữ cảnh.
+- GIỮ NGUYÊN chữ hoa-thường của tên bảng/cột (PascalCase): FactBooking, DimDate,
+  DimDestination, DimCustomerSegment, DimTour, các cột như DestinationKey, Revenue,
+  Pax, SatisfactionScore... TUYỆT ĐỐI KHÔNG đổi sang chữ thường hay thêm dấu gạch dưới
+  (vd KHÔNG viết fact_booking, destination_id).
+- Khi lọc/gom theo năm/quý/tháng phải JOIN sang DimDate qua DateKey rồi dùng
+  DimDate.YearNumber / QuarterNumber / MonthNumber.
+- "Doanh thu" = SUM(FactBooking.Revenue); "lượng khách" = SUM(FactBooking.Pax);
+  "số booking" = COUNT(*); "điểm hài lòng" = AVG(FactBooking.SatisfactionScore).
 - Truy vấn liệt kê chi tiết nên có LIMIT hợp lý.
 - Chỉ trả về câu SQL thuần, KHÔNG giải thích, KHÔNG markdown, KHÔNG ```."""
 
-# Ví dụ mẫu (few-shot) giúp LLM bám đúng phong cách JOIN/GROUP BY trên schema này.
-FEW_SHOT = """Câu hỏi: Doanh thu theo chi nhánh năm 2024?
-SQL: SELECT b.branch_name, SUM(f.total_amount) AS doanh_thu FROM fact_sales f \
-JOIN dim_branch b ON f.branch_id=b.branch_id JOIN dim_time t ON f.time_id=t.time_id \
-WHERE t.year=2024 GROUP BY b.branch_name ORDER BY doanh_thu DESC
+# Ví dụ mẫu (few-shot) — dùng đúng tên bảng/cột PascalCase của schema tour.
+FEW_SHOT = """Câu hỏi: Doanh thu theo điểm đến?
+SQL: SELECT d.DestinationName, SUM(f.Revenue) AS doanh_thu FROM FactBooking f \
+JOIN DimDestination d ON f.DestinationKey = d.DestinationKey \
+GROUP BY d.DestinationName ORDER BY doanh_thu DESC
 
-Câu hỏi: Top 5 sản phẩm bán chạy nhất?
-SQL: SELECT p.product_name, SUM(f.quantity) AS so_luong FROM fact_sales f \
-JOIN dim_product p ON f.product_id=p.product_id GROUP BY p.product_name \
-ORDER BY so_luong DESC LIMIT 5
+Câu hỏi: Số booking theo loại tour?
+SQL: SELECT t.TourName, COUNT(*) AS so_booking FROM FactBooking f \
+JOIN DimTour t ON f.TourKey = t.TourKey GROUP BY t.TourName ORDER BY so_booking DESC
 
-Câu hỏi: Liệt kê nhiệm vụ đang quá hạn?
-SQL: SELECT TenNhiemVu, DonViChuTri, SoNgayQuaHan FROM qlnv_chitiet \
-WHERE SoNgayQuaHan > 0 ORDER BY SoNgayQuaHan DESC LIMIT 100"""
+Câu hỏi: Doanh thu theo từng tháng năm 2024?
+SQL: SELECT dt.MonthNumber, SUM(f.Revenue) AS doanh_thu FROM FactBooking f \
+JOIN DimDate dt ON f.DateKey = dt.DateKey WHERE dt.YearNumber = 2024 \
+GROUP BY dt.MonthNumber ORDER BY dt.MonthNumber
+
+Câu hỏi: Điểm hài lòng trung bình theo nhóm khách?
+SQL: SELECT s.SegmentName, AVG(f.SatisfactionScore) AS diem_hai_long FROM FactBooking f \
+JOIN DimCustomerSegment s ON f.SegmentKey = s.SegmentKey GROUP BY s.SegmentName \
+ORDER BY diem_hai_long DESC"""
 
 SQL_USER_TEMPLATE = """NGỮ CẢNH SCHEMA (từ RAG):
 {schema_context}

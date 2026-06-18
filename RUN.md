@@ -37,11 +37,12 @@ Kiểm tra trạng thái container:
 docker compose ps
 ```
 
-### A2. Nạp dữ liệu mẫu vào DataMart
+### A2. Nạp dữ liệu vào DataMart (từ raw_data.csv)
 ```bash
-docker compose exec backend python /scripts/seed_data.py --reset
+docker compose exec backend python /scripts/load_tour_datamart.py
 ```
-> Sinh dữ liệu Star Schema mẫu (sản phẩm, khách hàng, chi nhánh, thời gian + fact bán hàng/đơn hàng/tồn kho).
+> ETL từ `raw_data.csv` → Star Schema "Vietnam Tour Bookings": DimDate, DimDestination,
+> DimCustomerSegment, DimTour, FactBooking (~4.4k booking). Tự làm sạch typo & gom NaN.
 
 ### A3. Tải model LLM về Ollama
 ```bash
@@ -113,7 +114,7 @@ Backend chạy tại <http://localhost:8000> (Swagger: `/docs`).
 Mở terminal mới, tại thư mục gốc dự án:
 ```bash
 # Seed dữ liệu mẫu vào MySQL
-python scripts/seed_data.py --reset
+python scripts/load_tour_datamart.py
 
 # Dựng vector DB và truy hồi thử
 python scripts/build_vector_db.py --test "doanh thu theo chi nhánh"
@@ -314,7 +315,7 @@ LLM_MODEL: gemini-2.0-flash
 docker compose up -d --build
 
 # Nạp dữ liệu + dựng vector DB (KHÔNG cần pull model Ollama vì đã dùng Gemini)
-docker compose exec backend python /scripts/seed_data.py --reset
+docker compose exec backend python /scripts/load_tour_datamart.py
 curl -X POST http://localhost:8000/rebuild-vector-db
 
 # Kiểm tra LLM đã kết nối Gemini

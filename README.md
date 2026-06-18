@@ -34,7 +34,7 @@ Frontend (React) → Backend API (FastAPI) → Orchestrator
 docker compose up -d --build
 
 # 2) Nạp dữ liệu mẫu + model LLM + vector DB
-docker compose exec backend python /scripts/seed_data.py --reset
+docker compose exec backend python /scripts/load_tour_datamart.py
 docker compose exec ollama ollama pull mistral:7b-instruct
 curl -X POST http://localhost:8000/rebuild-vector-db
 ```
@@ -55,7 +55,7 @@ uvicorn main:app --reload --port 8000
 
 **Dữ liệu & RAG** (cần MySQL chạy — `docker compose up -d mysql`)
 ```bash
-python scripts/seed_data.py --reset                   # seed Star Schema
+python scripts/load_tour_datamart.py                   # seed Star Schema
 python scripts/build_vector_db.py --test "doanh thu theo chi nhánh"
 ```
 
@@ -111,7 +111,7 @@ do_an/
 │   ├── src/{components,pages,services,hooks}
 │   ├── Dockerfile  nginx.conf
 ├── metadata/             # 9 file *.yaml (schema + KPI + business rules)
-├── scripts/              # init_db.sql, seed_data.py, build_vector_db.py
+├── scripts/              # init_db.sql, load_tour_datamart.py, build_vector_db.py
 ├── docker-compose.yml    # mysql + ollama + backend + frontend
 ├── HUONGDAN.md           # Lộ trình triển khai
 └── README.md

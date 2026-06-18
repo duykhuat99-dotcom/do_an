@@ -1,0 +1,27 @@
+table: DimDestination
+type: dimension
+description: >
+  Bảng chiều điểm đến du lịch. Mỗi dòng là một điểm đến cùng tỉnh/thành, vùng miền
+  và loại địa điểm. Dùng phân tích doanh thu/lượng khách theo điểm đến và vùng miền.
+grain: Mỗi dòng là một điểm đến duy nhất (DestinationKey).
+columns:
+  - name: DestinationKey
+    type: INT
+    description: Khóa chính của điểm đến. Được FactBooking tham chiếu.
+  - name: DestinationName
+    type: VARCHAR
+    description: Tên điểm đến (vd Phú Quốc, Đà Nẵng, Hạ Long, Hà Nội, TP.HCM, Sa Pa...).
+  - name: Province
+    type: VARCHAR
+    description: Tỉnh/thành phố của điểm đến (vd Kiên Giang, Quảng Ninh...).
+  - name: Region
+    type: VARCHAR
+    description: Vùng miền (Miền Bắc, Miền Trung, Miền Nam).
+  - name: DestinationType
+    type: VARCHAR
+    description: Loại địa điểm (Beach, Mountain, Historical, City, Island).
+sample_questions:
+  - Doanh thu theo điểm đến?
+  - Top 5 điểm đến có doanh thu cao nhất?
+  - Lượng khách theo vùng miền?
+  - Doanh thu theo loại địa điểm (biển, núi...)?

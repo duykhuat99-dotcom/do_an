@@ -1,54 +1,31 @@
 """
-Fact Tables của Star Schema — đều trỏ về các Dimension qua khóa ngoại.
+Fact Table — FactBooking (Star Schema "Vietnam Tour Bookings").
 
-  - fact_sales     : từng dòng bán hàng
-  - fact_orders    : từng đơn hàng (cấp đơn)
-  - fact_inventory : tồn kho theo sản phẩm/chi nhánh/thời điểm
+Mỗi dòng là một lượt đặt tour (booking), trỏ về 4 chiều: thời gian, điểm đến,
+nhóm khách hàng, loại tour. Các measure: Revenue, Pax, BookingCount, SatisfactionScore.
 """
 from __future__ import annotations
 
-from sqlalchemy import ForeignKey, Integer, Numeric, String
+from sqlalchemy import BigInteger, ForeignKey, Integer, Numeric
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database.base import Base
 
 
-class FactSales(Base):
-    __tablename__ = "fact_sales"
+class FactBooking(Base):
+    __tablename__ = "FactBooking"
 
-    sale_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    product_id: Mapped[int] = mapped_column(ForeignKey("dim_product.product_id"), index=True)
-    customer_id: Mapped[int] = mapped_column(ForeignKey("dim_customer.customer_id"), index=True)
-    branch_id: Mapped[int] = mapped_column(ForeignKey("dim_branch.branch_id"), index=True)
-    time_id: Mapped[int] = mapped_column(ForeignKey("dim_time.time_id"), index=True)
+    BookingID: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    DateKey: Mapped[int] = mapped_column(ForeignKey("DimDate.DateKey"), index=True)
+    DestinationKey: Mapped[int] = mapped_column(
+        ForeignKey("DimDestination.DestinationKey"), index=True
+    )
+    SegmentKey: Mapped[int] = mapped_column(
+        ForeignKey("DimCustomerSegment.SegmentKey"), index=True
+    )
+    TourKey: Mapped[int] = mapped_column(ForeignKey("DimTour.TourKey"), index=True)
 
-    quantity: Mapped[int] = mapped_column(Integer, default=0)
-    unit_price: Mapped[float] = mapped_column(Numeric(12, 2), default=0)
-    discount: Mapped[float] = mapped_column(Numeric(12, 2), default=0)  # số tiền giảm
-    total_amount: Mapped[float] = mapped_column(Numeric(14, 2), default=0)  # thành tiền sau giảm
-
-
-class FactOrders(Base):
-    __tablename__ = "fact_orders"
-
-    order_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    customer_id: Mapped[int] = mapped_column(ForeignKey("dim_customer.customer_id"), index=True)
-    branch_id: Mapped[int] = mapped_column(ForeignKey("dim_branch.branch_id"), index=True)
-    time_id: Mapped[int] = mapped_column(ForeignKey("dim_time.time_id"), index=True)
-
-    num_items: Mapped[int] = mapped_column(Integer, default=0)
-    order_status: Mapped[str] = mapped_column(String(20), index=True)  # completed/cancelled/returned
-    total_value: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
-
-
-class FactInventory(Base):
-    __tablename__ = "fact_inventory"
-
-    inventory_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    product_id: Mapped[int] = mapped_column(ForeignKey("dim_product.product_id"), index=True)
-    branch_id: Mapped[int] = mapped_column(ForeignKey("dim_branch.branch_id"), index=True)
-    time_id: Mapped[int] = mapped_column(ForeignKey("dim_time.time_id"), index=True)
-
-    stock_quantity: Mapped[int] = mapped_column(Integer, default=0)
-    reorder_level: Mapped[int] = mapped_column(Integer, default=0)
-    stock_value: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
+    Revenue: Mapped[float] = mapped_column(Numeric(18, 2), default=0)        # Doanh thu (VNĐ)
+    Pax: Mapped[int] = mapped_column(Integer, default=0)                     # Số lượng khách
+    BookingCount: Mapped[int] = mapped_column(Integer, default=1)           # Số booking
+    SatisfactionScore: Mapped[float | None] = mapped_column(Numeric(4, 2), nullable=True)

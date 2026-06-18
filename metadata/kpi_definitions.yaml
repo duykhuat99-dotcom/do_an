@@ -1,44 +1,38 @@
-# Định nghĩa các chỉ số KPI nghiệp vụ. Giúp LLM ánh xạ thuật ngữ người dùng
-# (doanh thu, lợi nhuận, AOV...) sang công thức SQL trên Star Schema.
+# Định nghĩa KPI nghiệp vụ cho DataMart đặt tour. Giúp LLM ánh xạ thuật ngữ người dùng
+# (doanh thu, lượng khách, điểm hài lòng...) sang công thức SQL trên Star Schema.
 kpis:
   - name: Doanh thu
     aliases: [revenue, doanh số, sales]
-    definition: Tổng tiền thu được sau chiết khấu từ các giao dịch bán hàng.
-    formula: SUM(fact_sales.total_amount)
-    tables: [fact_sales]
+    definition: Tổng doanh thu từ các lượt đặt tour.
+    formula: SUM(FactBooking.Revenue)
+    tables: [FactBooking]
 
-  - name: Sản lượng bán
-    aliases: [số lượng bán, quantity sold, units sold]
-    definition: Tổng số đơn vị sản phẩm đã bán.
-    formula: SUM(fact_sales.quantity)
-    tables: [fact_sales]
+  - name: Lượng khách
+    aliases: [pax, số khách, số lượng khách, tổng khách]
+    definition: Tổng số lượt khách của các booking.
+    formula: SUM(FactBooking.Pax)
+    tables: [FactBooking]
 
-  - name: Lợi nhuận gộp
-    aliases: [gross profit, lãi gộp]
-    definition: Chênh lệch giữa doanh thu và giá vốn hàng bán.
-    formula: SUM(fact_sales.total_amount) - SUM(fact_sales.quantity * dim_product.unit_cost)
-    tables: [fact_sales, dim_product]
+  - name: Số booking
+    aliases: [số lượt đặt, số đơn, booking count, lượng booking]
+    definition: Tổng số lượt đặt tour.
+    formula: COUNT(*)   # hoặc SUM(FactBooking.BookingCount)
+    tables: [FactBooking]
 
-  - name: Giá trị đơn trung bình
-    aliases: [AOV, average order value, đơn trung bình]
-    definition: Giá trị trung bình của một đơn hàng hoàn tất.
-    formula: AVG(fact_orders.total_value)
-    tables: [fact_orders]
+  - name: Điểm hài lòng trung bình
+    aliases: [satisfaction, mức độ hài lòng, average satisfaction]
+    definition: Điểm hài lòng trung bình của khách (thang 1-5).
+    formula: AVG(FactBooking.SatisfactionScore)
+    tables: [FactBooking]
 
-  - name: Tỷ lệ hủy đơn
-    aliases: [cancellation rate, tỷ lệ hủy]
-    definition: Phần trăm đơn hàng có trạng thái cancelled trên tổng số đơn.
-    formula: SUM(order_status='cancelled') / COUNT(*) * 100
-    tables: [fact_orders]
-
-  - name: Giá trị tồn kho
-    aliases: [inventory value, tồn kho]
-    definition: Tổng giá trị hàng tồn theo giá vốn tại thời điểm snapshot.
-    formula: SUM(fact_inventory.stock_value)
-    tables: [fact_inventory]
+  - name: Doanh thu trung bình mỗi booking
+    aliases: [AOV, average booking value, doanh thu/booking]
+    definition: Doanh thu trung bình trên một lượt đặt tour.
+    formula: AVG(FactBooking.Revenue)
+    tables: [FactBooking]
 
   - name: Tăng trưởng kỳ
     aliases: [growth, tăng trưởng, so sánh kỳ trước]
     definition: Phần trăm thay đổi của một chỉ số giữa kỳ hiện tại và kỳ trước.
     formula: (giá_trị_kỳ_này - giá_trị_kỳ_trước) / giá_trị_kỳ_trước * 100
-    tables: [fact_sales, dim_time]
+    tables: [FactBooking, DimDate]

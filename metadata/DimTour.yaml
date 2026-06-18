@@ -1,0 +1,26 @@
+table: DimTour
+type: dimension
+description: >
+  Bảng chiều loại tour. Mỗi dòng là một loại/chủ đề tour cùng danh mục, số ngày và
+  phương tiện di chuyển. Dùng phân tích doanh thu/lượng khách theo loại tour.
+grain: Mỗi dòng là một loại tour duy nhất (TourKey).
+columns:
+  - name: TourKey
+    type: INT
+    description: Khóa chính của loại tour. Được FactBooking tham chiếu.
+  - name: TourName
+    type: VARCHAR
+    description: Tên loại tour (vd Tour Biển, Tour Văn hóa, Tour Mạo hiểm, Tour Ẩm thực...).
+  - name: TourCategory
+    type: VARCHAR
+    description: Danh mục tour (Domestic, International, Luxury, Budget). Dữ liệu hiện là Domestic.
+  - name: DurationDays
+    type: INT
+    description: Số ngày của tour (giá trị đại diện theo loại tour).
+  - name: TransportationType
+    type: VARCHAR
+    description: Phương tiện di chuyển chính (Flight, Bus, Train, Ship, Car, Other).
+sample_questions:
+  - Doanh thu theo loại tour?
+  - Loại tour nào được đặt nhiều nhất?
+  - Điểm hài lòng theo loại tour?

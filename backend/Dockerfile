@@ -20,6 +20,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/ /app/
 COPY metadata/ /metadata/
 COPY scripts/ /scripts/
+# raw_data.csv KHÔNG copy vào image (file dữ liệu, đã .gitignore) — được mount qua
+# docker-compose (- ./raw_data.csv:/raw_data.csv:ro) khi chạy ETL load_tour_datamart.py.
 
 EXPOSE 8000
 

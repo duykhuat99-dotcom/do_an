@@ -1,0 +1,23 @@
+table: DimCustomerSegment
+type: dimension
+description: >
+  Bảng chiều nhóm khách hàng. Mỗi dòng là một phân khúc khách cùng nhóm tuổi và loại
+  khách (trong nước/doanh nghiệp). Dùng phân tích hành vi đặt tour theo nhóm khách.
+grain: Mỗi dòng là một nhóm khách hàng duy nhất (SegmentKey).
+columns:
+  - name: SegmentKey
+    type: INT
+    description: Khóa chính của nhóm khách. Được FactBooking tham chiếu.
+  - name: SegmentName
+    type: VARCHAR
+    description: Tên nhóm khách (Family, Young Professional, Student, Corporate).
+  - name: AgeGroup
+    type: VARCHAR
+    description: Nhóm tuổi đại diện của phân khúc (vd 18-25, 25-35, 30-50, 30-55).
+  - name: CustomerType
+    type: VARCHAR
+    description: Loại khách hàng (Domestic, Business).
+sample_questions:
+  - Doanh thu theo nhóm khách hàng?
+  - Nhóm khách nào đặt tour nhiều nhất?
+  - Điểm hài lòng trung bình theo phân khúc khách?

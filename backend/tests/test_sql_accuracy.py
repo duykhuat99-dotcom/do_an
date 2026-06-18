@@ -21,9 +21,9 @@ class FakeLLM:
 
 
 def test_prompt_has_fewshot():
-    p = build_sql_prompt("Doanh thu?", "[table] fact_sales")
+    p = build_sql_prompt("Doanh thu?", "[table] FactBooking")
     assert "VÍ DỤ MẪU" in p
-    assert "fact_sales" in p
+    assert "FactBooking" in p
 
 
 def test_prompt_includes_history_when_given():

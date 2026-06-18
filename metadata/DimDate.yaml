@@ -1,0 +1,41 @@
+table: DimDate
+type: dimension
+description: >
+  Bảng chiều thời gian của DataMart đặt tour. Mỗi dòng là một ngày (theo ngày đặt tour),
+  đã tách sẵn ngày/tháng/quý/năm để phân tích theo kỳ và so sánh.
+grain: Mỗi dòng là một ngày duy nhất (DateKey dạng YYYYMMDD).
+columns:
+  - name: DateKey
+    type: INT
+    description: Khóa chính, dạng số YYYYMMDD (vd 20240628). Được FactBooking tham chiếu.
+  - name: FullDate
+    type: DATE
+    description: Ngày đầy đủ (YYYY-MM-DD).
+  - name: DayOfMonth
+    type: INT
+    description: Ngày trong tháng (1-31).
+  - name: DayName
+    type: VARCHAR
+    description: Tên thứ trong tuần (Monday, Tuesday, ...).
+  - name: WeekOfYear
+    type: INT
+    description: Tuần trong năm.
+  - name: MonthNumber
+    type: INT
+    description: Tháng (1-12). Dùng gom nhóm theo tháng.
+  - name: MonthName
+    type: VARCHAR
+    description: Tên tháng (January, ...).
+  - name: QuarterNumber
+    type: INT
+    description: Quý (1-4). Dùng gom nhóm theo quý.
+  - name: YearNumber
+    type: INT
+    description: Năm. Dùng gom nhóm và so sánh theo năm.
+  - name: IsWeekend
+    type: BOOLEAN
+    description: Cờ cuối tuần (1=Thứ Bảy/Chủ Nhật, 0=ngày thường).
+sample_questions:
+  - Doanh thu theo từng tháng?
+  - So sánh số booking giữa các quý?
+  - Doanh thu các năm gần đây?
