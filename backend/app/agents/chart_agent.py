@@ -25,6 +25,27 @@ logger = get_logger(__name__)
 ALLOWED_CHARTS = {"bar", "line", "pie", "area", "scatter"}
 _PIE_HINTS = ("tỷ trọng", "cơ cấu", "tỷ lệ", "phân bố", "chiếm", "proportion")
 
+# Suy ra đơn vị cho nhãn trục từ tên cột (theo từ khóa).
+_UNIT_HINTS = [
+    (("doanh_thu", "doanhthu", "revenue", "doanh thu", "tien", "vnd"), " (VNĐ)"),
+    (("pax", "luong_khach", "so_khach", "so_luong_khach", "khach"), " (khách)"),
+    (("satisfaction", "hai_long", "hailong", "diem_hai_long", "diem"), " (điểm)"),
+    (("booking", "so_booking", "so_don", "so_luot"), " (booking)"),
+]
+
+
+def _axis_label(col) -> str:
+    """Làm đẹp tên cột thành nhãn trục + gắn đơn vị nếu nhận ra (VNĐ, khách, điểm...)."""
+    raw = str(col)
+    low = raw.lower()
+    pretty = raw.replace("_", " ").strip()
+    if pretty:
+        pretty = pretty[0].upper() + pretty[1:]
+    for keys, unit in _UNIT_HINTS:
+        if any(k in low for k in keys):
+            return pretty + unit
+    return pretty
+
 
 @dataclass
 class ChartConfig:
@@ -142,10 +163,11 @@ class ChartAgent:
         else:  # bar
             trace = {"type": "bar", "x": xvals, "y": yvals, "name": y}
 
-        layout: dict[str, Any] = {"title": choice["title"], "autosize": True}
+        layout: dict[str, Any] = {"title": {"text": choice["title"]}, "autosize": True}
         if ctype != "pie":
-            layout["xaxis"] = {"title": x}
-            layout["yaxis"] = {"title": y}
+            # Tên trục đẹp + đơn vị; automargin để tiêu đề không bị cắt.
+            layout["xaxis"] = {"title": {"text": _axis_label(x)}, "automargin": True}
+            layout["yaxis"] = {"title": {"text": _axis_label(y)}, "automargin": True}
 
         return ChartConfig(
             chart_type=ctype,
